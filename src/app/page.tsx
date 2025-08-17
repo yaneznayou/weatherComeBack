@@ -1,103 +1,115 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useEffect, useRef, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Box, Typography, Container, Button } from '@mui/material';
+import { DeleteSweep } from '@mui/icons-material';
+import { Provider } from 'react-redux';
+import { store } from '@/services/store';
+import CityForm from '@/components/CityForm/CityForm';
+import CityCard from '@/components/CityCard/CityCard';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { setCities, clearAllCities } from '@/features/cities/citiesSlice';
+import { RootState, AppDispatch } from '@/services/store';
+import { City } from '@/types/weather';
+
+const WeatherApp: React.FC = () => {
+  const [isClient, setIsClient] = useState(false);
+  const cities = useSelector((state: RootState) => state.cities.cities);
+  const dispatch = useDispatch<AppDispatch>();
+  const [storedCities, setStoredCities] = useLocalStorage<City[]>('cities', []);
+  const isInitialized = useRef(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized.current && storedCities.length > 0) {
+      dispatch(setCities(storedCities));
+      isInitialized.current = true;
+    } else if (!isInitialized.current) {
+      isInitialized.current = true;
+    }
+  }, [storedCities, dispatch]);
+
+  useEffect(() => {
+    if (isInitialized.current) {
+      setStoredCities(cities);
+    }
+  }, [cities, setStoredCities]);
+
+  const handleClearAll = () => {
+    dispatch(clearAllCities());
+  };
+
+    if (!isClient) {
+    return (
+      <div suppressHydrationWarning={true}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ mb: 4 }}>
+            Loading...
+          </Typography>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h6" color="textSecondary" gutterBottom>
+              Loading weather application...
+            </Typography>
+          </Box>
+        </Container>
+      </div>
+    );
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div suppressHydrationWarning={true}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ mb: 4 }}>
+          Weather Forecast
+        </Typography>
+        
+        <CityForm />
+        
+        {cities.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h6" color="textSecondary" gutterBottom>
+              Add a city to view weather
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Enter a city name in the form above
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteSweep />}
+                onClick={handleClearAll}
+                size="small"
+              >
+                Clear All Cities
+              </Button>
+            </Box>
+            
+            <Box className="grid">
+              {cities.map((city) => (
+                <CityCard key={city.id} city={city} />
+              ))}
+            </Box>
+          </>
+        )}
+      </Container>
     </div>
   );
-}
+};
+
+const Page: React.FC = () => {
+  return (
+    <Provider store={store}>
+      <WeatherApp />
+    </Provider>
+  );
+};
+
+export default Page;
